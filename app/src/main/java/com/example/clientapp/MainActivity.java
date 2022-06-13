@@ -5,12 +5,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.stealthcopter.networktools.SubnetDevices;
-import com.stealthcopter.networktools.subnet.Device;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -22,19 +22,45 @@ public class MainActivity extends AppCompatActivity {
 
     MyThread myThread;
     EditText ipCloudlet;
+    TextView testview;
+    ImageView status;
+    Switch aSwitch;
+    SharedPreferencesHelper sharedPreferencesHelper;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        testview = findViewById(R.id.testview);
         ipCloudlet = findViewById(R.id.editTextTextPersonName);
+        status = findViewById(R.id.imageView);
+        aSwitch = findViewById(R.id.switch1);
+        sharedPreferencesHelper = new SharedPreferencesHelper(MainActivity.this);
+
+
+        if (sharedPreferencesHelper.SharedGetConnected()){
+            aSwitch.setChecked(true);
+        }
+
+
+        aSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(b) {
+                    sharedPreferencesHelper.SharedStoreStatus(true, 1);
+                    Toast.makeText(MainActivity.this, ""+sharedPreferencesHelper.SharedGetConnected(), Toast.LENGTH_SHORT).show();
+                }else{
+                    sharedPreferencesHelper.SharedStoreStatus(false, 0);
+                }
+                sharedPreferencesHelper.SharedStoreCloudletIpAddress(ipCloudlet.getText().toString());
+                Toast.makeText(MainActivity.this, ""+sharedPreferencesHelper.SharedGetCloudletIpAddress(),Toast.LENGTH_SHORT).show();
+            }
+        });
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
         myThread = new MyThread();
         new Thread(myThread).start();
-        //findSubnetDevices();
     }
 
     private class MyThread implements Runnable
@@ -46,25 +72,18 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
-            if (flag == 0){
                 checkConnection();
-            }
-            else{
-                sendMsg();
-            }
         }
 
         public void checkConnection(){
             try {
-                socket = new Socket(ipaddress, 2337);
-                PrintWriter pw = new PrintWriter(socket.getOutputStream(),true);
-                Toast.makeText(MainActivity.this,"Connection Established",Toast.LENGTH_SHORT).show();
-                pw.write("connection established");
-                pw.close();
-                socket.close();
+                ApiUtils apiUtils = new ApiUtils(MainActivity.this);
+                apiUtils.offload_api("hello", "192.168.0.105:8080/calculate");
             }
             catch (Exception e){
                 e.printStackTrace();
+
+
             }
         }
 
@@ -108,38 +127,14 @@ public class MainActivity extends AppCompatActivity {
         myThread.sendMsgParam(msg);
     }
     public void btnConnect(View v)
-    {
+    {   /*
         String ipaddress = ipCloudlet.getText().toString();
         myThread.setIpAddress(ipaddress);
+
+*/
+        ApiUtils apiUtils = new ApiUtils(MainActivity.this);
+        apiUtils.offload_api("hello", "http://192.168.147.166:8080/calculate");
+        ipCloudlet.setText(sharedPreferencesHelper.SharedGetResponseData());
+
     }
-/*
-    public void findSubnetDevices(){
-
-        final long startTimeMillis = System.currentTimeMillis();
-        test.setText("Scanning");
-        SubnetDevices subnetDevices = SubnetDevices.fromLocalAddress().findDevices(new SubnetDevices.OnSubnetDeviceFound() {
-            @Override
-            public void onDeviceFound(Device device) {
-
-            }
-
-            @Override
-            public void onFinished(ArrayList<Device> devicesFound) {
-                float timeTaken = (System.currentTimeMillis() - startTimeMillis) / 1000.0f;
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        test.setText("Scan Finished");
-                        for (Device device : devicesFound) {
-                            test.append("Device " + device.hostname);
-                            test.append("IP : " + device.ip + "\n");
-                            test.append("Mack : " + device.mac + "\n");
-                            test.append("\n");
-                        }
-                    }
-                });
-            }
-        });
-    }*/
 }
