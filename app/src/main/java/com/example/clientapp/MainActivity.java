@@ -1,7 +1,9 @@
 package com.example.clientapp;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.view.View;
@@ -20,7 +22,6 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    MyThread myThread;
     EditText ipCloudlet;
     TextView testview;
     ImageView status;
@@ -58,83 +59,49 @@ public class MainActivity extends AppCompatActivity {
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
-
-        myThread = new MyThread();
-        new Thread(myThread).start();
     }
 
-    private class MyThread implements Runnable
-    {
-        private String msg="Hello world";
-        Socket socket;
-        String ipaddress = "localhost";
-        int flag = 0;
+    public void btnClickSend(View v) {
+        String msg = "hello this is nikhil's android";
+    }
+
+    public void btnConnect(View v) {
+        ApiUtils apiUtils = new ApiUtils(MainActivity.this);
+        apiUtils.offload_api("hello", "http://192.168.0.106:8080/calculate");
+
+        myThread thread = new myThread();
+        thread.setPriority(1);
+        thread.start();
+    }
+
+    class myThread extends Thread{
 
         @Override
         public void run() {
-                checkConnection();
-        }
+                for(int i=0; i <100;i++){
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        break;
+                    }
+                    if (sharedPreferencesHelper.SharedGetResponseResult()){
+                        ipCloudlet.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                ipCloudlet.setText("here");
+                            }
+                        });
 
-        public void checkConnection(){
-            try {
-                ApiUtils apiUtils = new ApiUtils(MainActivity.this);
-                apiUtils.offload_api("hello", "192.168.0.105:8080/calculate");
-            }
-            catch (Exception e){
-                e.printStackTrace();
-
-
-            }
-        }
-
-        public void sendMsg(){
-            try {
-                socket = new Socket(ipaddress, 2337);
-                Toast.makeText(MainActivity.this, "Message Sent",Toast.LENGTH_SHORT).show();
-                PrintWriter pw = new PrintWriter(socket.getOutputStream(),true);
-                pw.write(msg);
-                pw.close();
-                socket.close();
-            }
-            catch (Exception e){
-                e.printStackTrace();
-
-            }
-        }
-
-        public void sendMsgParam(String msg) {
-            this.msg = msg;
-            this.flag = 1;
-            if (!this.ipaddress.equals("localhost")){
-                run();
-            }
-            else{
-                Toast.makeText(MainActivity.this,"Please connect to a cloudlet first",Toast.LENGTH_SHORT).show();
-            }
+                    }
+                }
+                ipCloudlet.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        ipCloudlet.setText("not here");
+                    }
+                });
 
         }
-        public void setIpAddress(String ipaddress){
-            this.ipaddress = ipaddress;
-            this.flag=0;
-            run();
-
-        }
-    }
-
-    public void btnClickSend(View v)
-    {
-        String msg = "hello this is nikhil's android";
-        myThread.sendMsgParam(msg);
-    }
-    public void btnConnect(View v)
-    {   /*
-        String ipaddress = ipCloudlet.getText().toString();
-        myThread.setIpAddress(ipaddress);
-
-*/
-        ApiUtils apiUtils = new ApiUtils(MainActivity.this);
-        apiUtils.offload_api("hello", "http://192.168.147.166:8080/calculate");
-        ipCloudlet.setText(sharedPreferencesHelper.SharedGetResponseData());
-
     }
 }

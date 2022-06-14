@@ -54,12 +54,14 @@ public class SharedPreferencesHelper {
         SharedPreferences preferences = context.getSharedPreferences(response_text, Context.MODE_PRIVATE );
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean(response_result_text, response_result);
+        editor.apply();
     }
 
     public void SharedStoreResponseData(String response_data){
         SharedPreferences preferences = context.getSharedPreferences(response_text, Context.MODE_PRIVATE );
         SharedPreferences.Editor editor = preferences.edit();
         editor.putString(response_result_text, response_data);
+        editor.apply();
     }
     public boolean SharedGetResponseResult(){
         SharedPreferences preferences = context.getSharedPreferences(response_text, Context.MODE_PRIVATE);
