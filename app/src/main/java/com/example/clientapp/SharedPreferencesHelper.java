@@ -50,6 +50,16 @@ public class SharedPreferencesHelper {
         editor.apply();
     }
 
+    public void  SharedStoreHealth(boolean n){
+
+        SharedPreferences preferences = context.getSharedPreferences(status_text, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean(connected_text,n);
+        editor.apply();
+    }
+
+
+
     public void SharedStoreResponseResult(boolean response_result){
         SharedPreferences preferences = context.getSharedPreferences(response_text, Context.MODE_PRIVATE );
         SharedPreferences.Editor editor = preferences.edit();
@@ -60,7 +70,7 @@ public class SharedPreferencesHelper {
     public void SharedStoreResponseData(String response_data){
         SharedPreferences preferences = context.getSharedPreferences(response_text, Context.MODE_PRIVATE );
         SharedPreferences.Editor editor = preferences.edit();
-        editor.putString(response_result_text, response_data);
+        editor.putString(response_data_text, response_data);
         editor.apply();
     }
     public boolean SharedGetResponseResult(){

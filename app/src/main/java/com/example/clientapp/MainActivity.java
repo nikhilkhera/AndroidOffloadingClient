@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.StrictMode;
 import android.view.View;
 import android.widget.CompoundButton;
@@ -27,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     ImageView status;
     Switch aSwitch;
     SharedPreferencesHelper sharedPreferencesHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,27 +40,42 @@ public class MainActivity extends AppCompatActivity {
         sharedPreferencesHelper = new SharedPreferencesHelper(MainActivity.this);
 
 
-        if (sharedPreferencesHelper.SharedGetConnected()){
+
+        if (sharedPreferencesHelper.SharedGetConnected()) {
             aSwitch.setChecked(true);
+            status.setImageResource(R.drawable.status_on);
         }
 
 
         aSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b) {
-                    sharedPreferencesHelper.SharedStoreStatus(true, 1);
-                    Toast.makeText(MainActivity.this, ""+sharedPreferencesHelper.SharedGetConnected(), Toast.LENGTH_SHORT).show();
-                }else{
+                ApiUtils apiUtils = new ApiUtils(MainActivity.this);
+                if (b) {
+                        apiUtils.health_check("http://192.168.0.106:8080/health");
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                              if (! sharedPreferencesHelper.SharedGetConnected()){
+                                  aSwitch.setChecked(false);
+                              }
+                              else{
+                                  status.setImageResource(R.drawable.status_on);
+                              }
+                            }
+                        },2000);
+                } else {
                     sharedPreferencesHelper.SharedStoreStatus(false, 0);
+                    status.setImageResource(R.drawable.status_off);
                 }
                 sharedPreferencesHelper.SharedStoreCloudletIpAddress(ipCloudlet.getText().toString());
-                Toast.makeText(MainActivity.this, ""+sharedPreferencesHelper.SharedGetCloudletIpAddress(),Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "" + sharedPreferencesHelper.SharedGetCloudletIpAddress(), Toast.LENGTH_SHORT).show();
             }
         });
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
+
     }
 
     public void btnClickSend(View v) {
@@ -69,39 +86,5 @@ public class MainActivity extends AppCompatActivity {
         ApiUtils apiUtils = new ApiUtils(MainActivity.this);
         apiUtils.offload_api("hello", "http://192.168.0.106:8080/calculate");
 
-        myThread thread = new myThread();
-        thread.setPriority(1);
-        thread.start();
-    }
-
-    class myThread extends Thread{
-
-        @Override
-        public void run() {
-                for(int i=0; i <100;i++){
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                        break;
-                    }
-                    if (sharedPreferencesHelper.SharedGetResponseResult()){
-                        ipCloudlet.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                ipCloudlet.setText("here");
-                            }
-                        });
-
-                    }
-                }
-                ipCloudlet.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        ipCloudlet.setText("not here");
-                    }
-                });
-
-        }
     }
 }

@@ -7,5 +7,8 @@ interface OffloadingInterface {
 
    int status();
    boolean get_status_connected();
-   String offload(String data);
+   void offload(String data);
+   boolean get_response_result();
+   void set_response_result_false();
+   String get_response_data();
 }

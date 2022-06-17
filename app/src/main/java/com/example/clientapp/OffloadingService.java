@@ -31,14 +31,32 @@ public class OffloadingService extends Service {
         }
 
         @Override
-        public String offload(String data) throws RemoteException {
+        public void offload(String data) throws RemoteException {
             SharedPreferencesHelper sharedPreferencesHelper = new SharedPreferencesHelper(OffloadingService.this);
-
-            ApiUtils apiUtils = new ApiUtils(OffloadingService.this);
             String cloudlet_ipaddress = sharedPreferencesHelper.SharedGetCloudletIpAddress() + ":8080" + "/calculate";
 
-            //String response_data = apiUtils.offload_api("hi", cloudlet_ipaddress);
-            return "heeeee";
+            ApiUtils apiUtils = new ApiUtils(OffloadingService.this);
+            apiUtils.offload_api(data, "http://192.168.0.106:8080/calculate/");
+            return ;
         }
+
+        @Override
+        public boolean get_response_result() throws RemoteException{
+            SharedPreferencesHelper sharedPreferencesHelper = new SharedPreferencesHelper(OffloadingService.this);
+            return sharedPreferencesHelper.SharedGetResponseResult();
+        }
+
+        @Override
+        public void set_response_result_false() throws RemoteException {
+            SharedPreferencesHelper sharedPreferencesHelper = new SharedPreferencesHelper( OffloadingService.this);
+            sharedPreferencesHelper.SharedStoreResponseResult(false);
+        }
+
+        @Override
+        public String get_response_data() throws RemoteException {
+            SharedPreferencesHelper sharedPreferencesHelper = new SharedPreferencesHelper(OffloadingService.this);
+            return sharedPreferencesHelper.SharedGetResponseData();
+        }
+
     };
 }
